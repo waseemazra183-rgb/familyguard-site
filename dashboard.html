@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<!-- FamilyGuard dashboard v2.11-apps — DEPLOY CHECK: Ctrl+U (view-source) me YE line
+     dikhni chahiye. Nahi dikhi = Netlify par PURANA version hai, naya upload karo! -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://checkout.razorpay.com https://script.google.com https://script.googleusercontent.com; connect-src 'self' https://*.googleapis.com wss://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://script.google.com https://script.googleusercontent.com https://*.razorpay.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://*.firebaseapp.com https://*.razorpay.com https://accounts.google.com https://www.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>FamilyGuard — Parent Dashboard</title>
+<style>
+  :root{
+    --bg:#0B1220; --bg2:#0E1626; --card:#111C2E; --card2:#152238;
+    --line:#1E293B; --line2:#1E3A5F;
+    --txt:#F1F5F9; --txt2:#94A3B8; --txt3:#64748B;
+    --blue:#2563EB; --blue2:#3B82F6; --green:#10B981; --amber:#F59E0B; --red:#EF4444;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  /* ── PRO DARK SCROLLBAR (har jagah — page + lists) ── */
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#1E3A5F;border-radius:8px;border:2px solid #0B1220}
+  ::-webkit-scrollbar-thumb:hover{background:#3B5A8C}
+  ::-webkit-scrollbar-corner{background:transparent}
+  *{scrollbar-width:thin;scrollbar-color:#1E3A5F transparent}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;min-height:100vh}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px}
+  h1,h2,h3{font-weight:800}
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#93C5FD;background:rgba(37,99,235,.12);border:1px solid rgba(59,130,246,.35);padding:5px 12px;border-radius:999px;margin-bottom:14px}
+  .muted{color:var(--txt2);font-size:14px}
+  .hide{display:none!important}
+
+  header{position:sticky;top:0;z-index:50;background:rgba(11,18,32,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:17px}
+  .logo .dot{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),#818CF8);display:flex;align-items:center;justify-content:center;font-size:15px}
+  .pill{font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:999px;background:var(--card);border:1px solid var(--line2)}
+  .pill.ok{color:var(--green);border-color:rgba(16,185,129,.4)}
+  .pill.over{color:var(--amber);border-color:rgba(245,158,11,.4)}
+  .lnk{color:var(--txt2);background:none;border:none;font-size:13.5px;font-weight:600;cursor:pointer;padding:8px 12px;border-radius:8px}
+  .lnk:hover{color:#fff;background:var(--card)}
+
+  .auth-hero{padding:64px 0 30px;text-align:center}
+  .auth-hero h1{font-size:clamp(26px,4.5vw,38px)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .authbox{max-width:420px;margin:26px auto 60px}
+  .tabs{display:flex;gap:8px;margin-bottom:20px}
+  .tab{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--txt2);font-weight:700;font-size:14px;cursor:pointer}
+  .tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  label{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);margin:14px 0 6px}
+  input{width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--bg2);color:var(--txt);font-size:15px;outline:none}
+  input:focus{border-color:var(--blue)}
+  .btn{display:inline-block;width:100%;text-align:center;background:linear-gradient(135deg,var(--blue),#4F46E5);color:#fff;font-weight:700;font-size:15.5px;padding:14px;border-radius:11px;border:none;cursor:pointer;margin-top:18px;text-decoration:none}
+  .btn:hover{filter:brightness(1.1)}
+  .btn.ghost{background:var(--card2);border:1px solid var(--line2)}
+  .btn.sm{width:auto;padding:9px 16px;font-size:13.5px;margin-top:0}
+  .note{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:13.5px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:#BFDBFE}
+  .err{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:13.5px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);color:#FCA5A5}
+
+  /* ── feature screens ── */
+  .fscreen{padding:20px 0 50px}
+  .fhead{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .back{width:38px;height:38px;border-radius:10px;background:var(--card);border:1px solid var(--line2);color:var(--txt);font-size:17px;cursor:pointer;flex-shrink:0}
+  .fhead h2{font-size:20px}
+  .fhead .muted{font-size:12.5px}
+
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:14px}
+  .stat{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--txt3)}
+  .stat b{display:block;font-size:19px;margin-top:3px}
+  .ok{color:var(--green)} .amb{color:var(--amber)} .red{color:var(--red)}
+
+  /* home feature grid — app jaisa */
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:18px}
+  .fbtn{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 18px;cursor:pointer;text-align:left;transition:transform .15s,border-color .15s}
+  .fbtn:hover{transform:translateY(-3px);border-color:var(--line2)}
+  .fbtn .ico{font-size:26px;margin-bottom:10px}
+  .fbtn b{display:block;font-size:15.5px}
+  .fbtn span{font-size:12.5px;color:var(--txt2)}
+  .fbtn .lk{display:inline-block;margin-top:8px;font-size:11px;font-weight:800;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);padding:3px 10px;border-radius:999px}
+
+  .list{max-height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--card2);border:1px solid var(--line);border-radius:11px}
+  .item .ico{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff}
+  .item .bd{flex:1;min-width:0}
+  .item .bd b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .bd span{font-size:12.5px;color:var(--txt2);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .side{font-size:11.5px;color:var(--txt3);flex-shrink:0}
+  .chk{width:20px;height:20px;accent-color:var(--red);flex-shrink:0;cursor:pointer}
+  .ptoast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:99;background:linear-gradient(135deg,#059669,#10B981);color:#fff;font-size:14.5px;font-weight:600;padding:14px 22px;border-radius:14px;box-shadow:0 14px 40px rgba(16,185,129,.35);animation:ptin .35s ease}
+  @keyframes ptin{from{opacity:0;transform:translateX(-50%) translateY(18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  .barw{height:5px;background:#0F1B2D;border:1px solid #1E293B;border-radius:4px;margin-top:6px;overflow:hidden}
+  .barf{height:100%;background:linear-gradient(90deg,#2563EB,#4F46E5);border-radius:4px}
+  .item .ico img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+  .item .ico.pad{background:#0F1B2D;padding:3px}
+  .photo{width:100%;border-radius:12px;border:1px solid var(--line2);margin-top:12px;display:none}
+  .bubble{max-width:78%;padding:9px 13px;border-radius:13px;font-size:14px;margin:3px 0}
+  .b-in{background:#1B2A44;align-self:flex-start}
+  .b-out{background:#1D4ED8;align-self:flex-end}
+  .thread{display:flex;flex-direction:column}
+
+  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:14px}
+  .plan{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;position:relative}
+  .plan.hot{border-color:var(--blue);box-shadow:0 14px 40px rgba(37,99,235,.18)}
+  .plan .nm{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--txt2);text-transform:uppercase}
+  .plan .pr{font-size:30px;font-weight:800;margin:6px 0 2px}
+  .plan .per{font-size:12px;color:var(--txt3);margin-bottom:14px}
+  .plan a{display:block;background:linear-gradient(135deg,var(--blue),#4F46E5);color:#fff;font-weight:700;font-size:14px;padding:11px;border-radius:10px;text-decoration:none;cursor:pointer}
+  .badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--blue),#4F46E5);font-size:10.5px;font-weight:800;letter-spacing:.07em;color:#fff;padding:4px 12px;border-radius:999px;white-space:nowrap}
+  #cfgErr{max-width:560px;margin:70px auto;text-align:center}
+  footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--txt3);font-size:12.5px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+
+<div id="cfgErr" class="hide">
+  <div class="card">
+    <h2 style="font-size:20px">⚙️ Setup baaki hai</h2>
+    <p class="muted" style="margin-top:10px">
+      Ye file <b>Netlify par deploy karne ke baad</b> kaam karegi. Pehle is file ke andar
+      sabse upar <b>CONFIG</b> section me apni Firebase project ki values daalo —
+      <i>apiKey, authDomain, projectId</i> + WEBHOOK_URL. Phir deploy karo.
+    </p>
+  </div>
+</div>
+
+<header class="hide" id="topbar">
+  <div class="wrap nav">
+    <div class="logo"><span class="dot">🛡️</span> FamilyGuard</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="pill" id="subPill">…</span>
+      <button class="lnk" onclick="logout()">Log out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= AUTH ================= -->
+<div id="screen-auth">
+  <div class="wrap">
+    <div class="auth-hero">
+      <span class="tag">Parent Dashboard</span>
+      <h1>FamilyGuard <span style="color:var(--blue2)">Web</span></h1>
+      <p class="muted" style="margin-top:10px">Login karo — wahi account jo app me hai.<br>3-day free trial har naye account par.</p>
+    </div>
+    <div class="card authbox">
+      <div class="tabs">
+        <button class="tab on" id="tabLogin">LOG IN</button>
+        <button class="tab" id="tabSignup">CREATE ACCOUNT</button>
+      </div>
+      <label>Email</label>
+      <input id="aEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      <label>Password</label>
+      <input id="aPass" type="password" placeholder="••••••••" autocomplete="current-password">
+      <button class="btn" id="authBtn">LOG IN</button>
+      <div id="authMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PAIR ================= -->
+<div id="screen-pair" class="hide">
+  <div class="wrap">
+    <div class="auth-hero">
+      <span class="tag">Pairing</span>
+      <h1 style="font-size:26px">Child device se connect karo</h1>
+      <p class="muted" style="margin-top:8px">Child phone me Battery Health app kholo —<br>bade code-wale screen par 6-digit code dikhta hai.</p>
+    </div>
+    <div class="card authbox">
+      <label>Child Device Code</label>
+      <input id="pairCode" inputmode="numeric" maxlength="6" placeholder="e.g. 4 8 2 9 1 7">
+      <button class="btn" onclick="doPair()">CONNECT</button>
+      <div id="pairMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MAIN (screen-based) ================= -->
+<div id="screen-main" class="hide">
+  <div class="wrap">
+
+    <!-- ─── HOME ─── -->
+    <div class="fscreen" id="scr-home">
+      <span class="tag" id="childName">Child</span>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:18px">📱 Child Status</h2>
+          <div style="display:flex;gap:4px">
+            <button class="lnk" onclick="loadAccount(true);pingChild()">🔄</button>
+            <button class="lnk" onclick="disconnect()">⏏ Disconnect</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn ghost sm" id="hideBtn" onclick="toggleHide()">🙈 Hide app</button>
+        </div>
+        <div class="statgrid">
+          <div class="stat"><em>Battery</em><b id="stBatt" class="amb">—</b></div>
+          <div class="stat"><em>Network</em><b id="stNet">—</b></div>
+          <div class="stat"><em>Online</em><b id="stOn" class="amb">checking…</b></div>
+          <div class="stat"><em>App Hidden</em><b id="stHid">—</b></div>
+        </div>
+        <div id="alertBox"></div>
+      </div>
+
+      <div class="fgrid">
+        <div class="fbtn" onclick="openFeature('cam')">
+          <div class="ico">📷</div><b>Camera Capture</b><span>Front/back photo</span><span class="lk hide" id="lk-cam">🔒 PLAN</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('apps')">
+          <div class="ico">🚫</div><b>App Blocking</b><span>Apps block/unblock</span><span class="lk hide" id="lk-apps">🔒 PLAN</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('notif')">
+          <div class="ico">🔔</div><b>Notifications</b><span>Real-time feed</span><span class="lk hide" id="lk-notif">🔒 PLAN</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('chat')">
+          <div class="ico">💬</div><b>Chats</b><span>Chat oversight</span><span class="lk hide" id="lk-chat">🔒 PLAN</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('usage')">
+          <div class="ico">📊</div><b>App Usage</b><span>24h screen time</span><span class="lk hide" id="lk-usage">🔒 PLAN</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('plans')">
+          <div class="ico">⭐</div><b>Plans</b><span>Trial / subscribe</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('live')">
+          <div class="ico">📺</div><b>Live View</b><span>Parent app me available</span>
+        </div>
+        <div class="fbtn" onclick="openFeature('dl')">
+          <div class="ico">⬇️</div><b>Get Apps</b><span>APK download + install guide</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CAMERA ─── -->
+    <div class="fscreen hide" id="scr-cam">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>📷 Camera Capture</h2><div class="muted">Child phone se turant photo (invisible capturer)</div></div></div>
+      <div class="card">
+        <button class="btn ghost sm" onclick="shoot('back')">📷 Back Cam</button>
+        <button class="btn ghost sm" style="margin-left:8px" onclick="shoot('front')">🤳 Front Cam</button>
+        <img id="photoImg" class="photo" alt="captured">
+        <p class="muted" id="photoMsg" style="margin-top:12px"></p>
+      </div>
+    </div>
+
+    <!-- ─── APPS ─── -->
+    <div class="fscreen hide" id="scr-apps">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>🚫 App Blocking</h2><div class="muted" id="appsMsg">Load dabao — list 5-10 sec me aati hai</div></div></div>
+      <div class="card">
+        <button class="btn ghost sm" onclick="reqApps()">🔄 Load / Refresh apps</button>
+        <div class="list" id="appsList" style="margin-top:14px"><p class="muted">"Load" dabao…</p></div>
+        <button class="btn sm" style="margin-top:14px" onclick="saveBlocked()">💾 Save blocked list</button>
+      </div>
+    </div>
+
+    <!-- ─── NOTIFICATIONS ─── -->
+    <div class="fscreen hide" id="scr-notif">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>🔔 Notifications</h2><div class="muted">Child phone ki real notifications (live)</div></div></div>
+      <div class="card"><div class="list" id="notifList"><p class="muted">Waiting for notifications…</p></div></div>
+    </div>
+
+    <!-- ─── CHATS ─── -->
+    <div class="fscreen hide" id="scr-chat">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>💬 Chat Oversight</h2><div class="muted">WhatsApp / Telegram / Insta (3 din history)</div></div></div>
+      <div class="card">
+        <div class="list" id="chatList"><p class="muted">Waiting for chat notifications…</p></div>
+        <div class="hide" id="chatThread" style="margin-top:14px">
+          <button class="lnk" onclick="closeThread()">← Back</button>
+          <div class="list thread" id="threadList" style="max-height:50vh"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── APP USAGE ─── -->
+    <div class="fscreen hide" id="scr-usage">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>📊 App Usage</h2><div class="muted" id="usageMsg">Refresh dabao — data 5-10 sec me aata hai (last 24h)</div></div></div>
+      <div class="card">
+        <button class="btn ghost sm" onclick="reqUsage()">🔄 Refresh usage</button>
+        <div class="list" id="usageList" style="margin-top:14px"><p class="muted">"Refresh" dabao…</p></div>
+      </div>
+    </div>
+
+    <!-- ─── LIVE VIEW → APP DOWNLOAD ─── -->
+    <div class="fscreen hide" id="scr-live">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>📺 Live View</h2><div class="muted">Parent Monitor app me available</div></div></div>
+      <div class="card" style="text-align:center;padding:38px 18px">
+        <div style="font-size:58px;line-height:1">📲</div>
+        <h3 style="margin:16px 0 8px;font-size:19px">Live View is available in the Parent Monitor App</h3>
+        <p class="muted" style="max-width:440px;margin:0 auto 20px">Child ka screen real-time dekhne ke liye Parent Monitor (Android) app download karo. App me Live View ke saath Remote Control aur Mic bhi milta hai.</p>
+        <!-- APK: deploy ke time website folder me "ParentMonitor.apk" + "ChildGuard.apk" rakho (Get Apps screen me bhi hain) -->
+        <a class="btn sm" style="display:inline-block;text-decoration:none;padding:13px 26px;font-size:15px" href="https://github.com/waseemazra183-rgb/familyguard-site/releases/download/v1/ParentMonitor.apk">
+          ⬇&nbsp; Download Parent Monitor App
+        </a>
+        <div style="margin-top:10px;font-size:13px">Child phone ke liye? <a href="https://github.com/waseemazra183-rgb/familyguard-site/releases/download/v1/ChildGuardApp.apk" style="color:#93C5FD">⬇ Child app APK</a> &nbsp;·&nbsp; <a href="#" onclick="goScreen('dl');return false" style="color:#93C5FD">Full guide</a></div>
+        <p class="muted" style="font-size:12px;margin-top:16px">Install karte waqt phone me "Install unknown apps / unknown sources" allow karna hoga · Web dashboard ke baaki features (Camera, Apps, Notifications, Chat, Usage) yahin kaam karte rahenge</p>
+      </div>
+    </div>
+
+    <!-- ─── GET APPS (APK downloads) ─── -->
+    <div class="fscreen hide" id="scr-dl">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>⬇️ Get the Apps</h2><div class="muted">Direct APK download · install guide</div></div></div>
+      <div class="card">
+        <div class="plans" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:0">
+          <div class="plan">
+            <div class="nm">Parent phone 🛡️</div>
+            <div style="font-size:42px;margin:8px 0">🛡️</div>
+            <b style="font-size:16px">Parent Monitor</b>
+            <p class="muted" style="font-size:12.5px;margin:8px 0 14px">Live View · Remote Control · Mic · Alerts — sab ke sab</p>
+            <a href="https://github.com/waseemazra183-rgb/familyguard-site/releases/download/v1/ParentMonitor.apk">⬇ DOWNLOAD APK</a>
+          </div>
+          <div class="plan">
+            <div class="nm">Child phone 👶</div>
+            <div style="font-size:42px;margin:8px 0">👶</div>
+            <b style="font-size:16px">FamilyGuard Child</b>
+            <p class="muted" style="font-size:12.5px;margin:8px 0 14px">Child phone par install karo — pairing code khud dikh jayega</p>
+            <a href="https://github.com/waseemazra183-rgb/familyguard-site/releases/download/v1/ChildGuard.apk">⬇ DOWNLOAD APK</a>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3 style="font-size:15px">📱 Install guide (Play Protect wala popup aaye to?)</h3>
+        <ol style="margin:10px 0 0 18px;line-height:2;font-size:13px;color:var(--txt2)">
+          <li>Upar button dabao — <b>APK download</b> ho jayega (notification me dikhega)</li>
+          <li>APK kholo. "Install unknown apps" maange to: <b>Settings → Allow from this source</b> (browser/File Manager) → wapas → <b>Install</b></li>
+          <li><b>Play Protect</b> warning aaye → <b>More details → Install anyway</b> (ye tumhari APNI app hai, 100% normal)</li>
+          <li>⚠️ <b>"Blocked by Play Protect" aaye aur Install anyway NAHI dikhe?</b> → <b>Play Store app kholo → top-right profile photo → Play Protect → ⚙️ Settings → "Scan apps with Play Protect" OFF</b> → ab APK install karo → ✅ ho jayegi → <b>phir Play Protect wapas ON kar dena</b></li>
+          <li>Phir bhi na lage? <b>Airplane mode ON</b> karke APK kholo (online check fail = seedha install), ya <b>Files/File Manager</b> app se APK kholo (Chrome se nahi)</li>
+          <li>Ho gaya ✅ — <b>tumhare phone par Parent Monitor</b>, <b>child phone par Child app</b>. Phir yahin dashboard se pair karo</li>
+        </ol>
+        <p class="muted" style="font-size:12px;margin-top:10px">Note: child app apne aap ek "Battery Health" jaisa normal utility app dikhta hai — child phone par aaram se install karo.<br>💡 <b>Aasaan tarika (Setup Wizard):</b> upar wala Child APK button <b>FG Setup</b> wizard deta hai — use child phone par install karo, wizard ke andar se asli child app download + install ho jayegi (browser/Play Protect ka chakkar nahi). Wizard: Download → Install → Open → pairing code.</p>
+      </div>
+    </div>
+
+    <!-- ─── PLANS ─── -->
+    <div class="fscreen hide" id="scr-plans">
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>⭐ Subscription</h2><div class="muted" id="planMsg">Checking…</div></div></div>
+      <div class="card">
+        <div class="plans">
+          <div class="plan">
+            <div class="nm">Weekly</div><div class="pr">₹199</div><div class="per">7 days</div>
+            <a onclick="pay('week')">PAY ₹199</a>
+          </div>
+          <div class="plan hot">
+            <span class="badge">★ MOST POPULAR</span>
+            <div class="nm">Monthly</div><div class="pr">₹399</div><div class="per">30 days</div>
+            <a onclick="pay('month')">PAY ₹399</a>
+          </div>
+          <div class="plan">
+            <div class="nm">Yearly</div><div class="pr">₹2,999</div><div class="per">365 days · save 45%</div>
+            <a onclick="pay('year')">PAY ₹2,999</a>
+          </div>
+        </div>
+        <p class="muted" style="margin-top:14px;font-size:12.5px">💳 Payment yahin popup me hoga — complete hote hi <b>REALTIME</b> activate (koi refresh nahi). Secure payments via Razorpay (UPI / cards / netbanking).</p>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn ghost sm" onclick="loadAccount(true)">🔄 Refresh status</button>
+          <button class="btn ghost sm" onclick="pingChild()">📶 Ping child</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer><div class="wrap">FamilyGuard Web · Parental control for families · requires parent/guardian consent on the child device</div></footer>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   CONFIG — apni values daalo (Firebase Console → Project Settings →
+   General → "Your apps" → Web app → config) + Apps Script URL
+   ════════════════════════════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBKUeJww4SIzyEMcQ335HboqGZ3FM3azXo",
+  authDomain: "familyguard-7a825.firebaseapp.com",
+  projectId: "familyguard-7a825",
+};
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyTi2EFujh8g040r5got6hD34AAkfd6OaGgog43rfHbVaA4nKycsRYRByH9ypvqZqM/exec";
+const DASH_VER = "v2.11-apps";   // F12 console me yahi version dikhna chahiye
+// APP CHECK (reCAPTCHA v3) — Firebase Console → App Check → Apps → web app
+// register karke jo SITE KEY mile yahan dalo. PASTE rahe to skip (abhi
+// log-only chalta hai; console me enforce karne par bot/script block).
+const APPCHECK_KEY = "PASTE_RECAPTCHA_V3_SITE_KEY";
+console.log("FamilyGuard dashboard", DASH_VER);
+/* ════════════════════════════════════════════════════════════════ */
+
+const CHAT_PKGS = ["whatsapp","telegram","instagram","snapchat","messenger","facebook","signal","discord"];
+const ONLINE_MS = 20*60*1000;
+let db=null, auth=null, user=null, acc=null, code=null;
+let roomUn=null, alertUn=null, notifUn=null, photoUn=null;
+let apps=[], blocked=new Set(), notifs=[], appsSig="";
+let iconMap={}, iconsLoadedFor=null, lastAppsRaw=null;   // real app icons (pages se)
+let usageMyTs=0, usageLastEcho=0;                        // app-usage protocol
+
+/* ---------- boot ---------- */
+if (FIREBASE_CONFIG.apiKey.includes("PASTE") || WEBHOOK_URL.includes("PASTE")) {
+  document.getElementById("cfgErr").classList.remove("hide");
+} else if (typeof firebase === "undefined" || !firebase.initializeApp) {
+  // SDK LOAD FAIL — preview-sandbox / network block / ad-blocker. Iske bina
+  // poora script mar jaata tha aur login button KUCH nahi karta tha (silent
+  // death) — ab saaf banner dikhta hai.
+  const b=document.getElementById("cfgErr");
+  b.classList.remove("hide");
+  b.innerHTML='<div class="card"><h2 style="font-size:20px">⚠️ Firebase load nahi hua</h2>'+
+    '<p class="muted" style="margin-top:10px">Ye page <b>chat-preview / offline me kaam nahi karega</b> — wahan internet block hota hai. '+
+    'Apni <b>Netlify URL browser me kholo</b>. Wahan bhi ye dikhe to: internet on hai? ad-blocker off? phir reload (Ctrl+Shift+R).</p></div>';
+} else {
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    // APP CHECK — bot/script se Firebase API misuse band (console me enforce
+    // karne par full effect). Key nahi hai to chupchap skip.
+    if (typeof firebase.appCheck === "function" && !APPCHECK_KEY.includes("PASTE")) {
+      firebase.appCheck().activate(APPCHECK_KEY, true);
+    }
+    auth = firebase.auth(); db = firebase.firestore();
+    auth.onAuthStateChanged(u => { user = u; if (u) afterLogin(); else showScreen("auth"); });
+  }catch(e){
+    const b=document.getElementById("cfgErr");
+    b.classList.remove("hide");
+    b.innerHTML='<div class="card"><h2 style="font-size:20px">⚠️ Firebase init error</h2>'+
+      '<p class="muted" style="margin-top:10px">'+(e.message||e)+'</p></div>';
+    console.error("firebase init:", e);
+  }
+}
+
+function showScreen(s){
+  document.getElementById("screen-auth").classList.toggle("hide", s!=="auth");
+  document.getElementById("screen-pair").classList.toggle("hide", s!=="pair");
+  document.getElementById("screen-main").classList.toggle("hide", s!=="main");
+  document.getElementById("topbar").classList.toggle("hide", s==="auth");
+}
+
+/* ---------- feature navigation (hard paywall) ---------- */
+const FEATURES = ["cam","apps","notif","chat","usage","live","plans"];
+function goScreen(id){
+  FEATURES.forEach(f => document.getElementById("scr-"+f).classList.toggle("hide", f!==id));
+  document.getElementById("scr-home").classList.toggle("hide", id!==null);
+  window.scrollTo(0,0);
+}
+function goHome(){ goScreen(null); }
+function openFeature(id){
+  // HARD PAYWALL: trial/sub khatam to paid features kholne ke liye plans screen
+  if(id!=="plans" && id!=="dl" && !active()){ goScreen("plans"); return; }   // dl free — download koi bhi kar sake
+  goScreen(id);
+}
+
+/* ---------- auth ---------- */
+let authMode="login";
+document.getElementById("tabLogin").onclick = () => { authMode="login"; setTabs(); };
+document.getElementById("tabSignup").onclick = () => { authMode="signup"; setTabs(); };
+// ── LOGIN BUTTON BINDING (v2.9) — ye line kabhi delete mat karna! Iske
+//    bina button daba to KUCH nahi hota (v2.7-v2.8 ka chhupa bug tha).
+document.getElementById("authBtn").onclick = doAuth;
+["aEmail","aPass"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{ if(e.key==="Enter") doAuth(); });
+});
+function setTabs(){
+  document.getElementById("tabLogin").classList.toggle("on", authMode==="login");
+  document.getElementById("tabSignup").classList.toggle("on", authMode==="signup");
+  document.getElementById("authBtn").textContent = authMode==="login" ? "LOG IN" : "CREATE ACCOUNT · 3-DAY FREE TRIAL";
+}
+function authMsg(html, isErr){ document.getElementById("authMsg").innerHTML = html ? `<div class="${isErr?'err':'note'}">${html}</div>` : ""; }
+
+async function doAuth(){
+  const em = document.getElementById("aEmail").value.trim();
+  const pw = document.getElementById("aPass").value;
+  authMsg("");
+  if(!em || pw.length<6){ authMsg("Email + kam se kam 6-digit password daalo", true); return; }
+  try{
+    if(authMode==="signup"){
+      const cred = await auth.createUserWithEmailAndPassword(em, pw);
+      await cred.user.sendEmailVerification();
+      await auth.signOut();
+      authMsg("📧 Verification email bheja gaya <b>"+em+"</b> par.<br>Email kholo → verify link dabao → phir yahan LOGIN karo.<br>(Trial sirf verified email ko milta hai)");
+    } else {
+      const cred = await auth.signInWithEmailAndPassword(em, pw);
+      if(!cred.user.emailVerified){ await auth.signOut(); authMsg("Email verified NAHI hai — apna inbox kholo, verification link dabao, phir login karo.", true); return; }
+    }
+  }catch(e){ authMsg(friendly(e), true); }
+}
+function friendly(e){
+  const c = e.code||"";
+  if(c.includes("invalid-credential")||c.includes("wrong-password")||c.includes("user-not-found")) return "Email ya password galat hai";
+  if(c.includes("email-already-in-use")) return "Ye email pehle se registered hai — LOG IN karo";
+  if(c.includes("weak-password")) return "Password kamzor hai (6+ characters)";
+  if(c.includes("too-many-requests")) return "Bahut koshish ho gayi — thodi der baad try karo";
+  return "Error: "+(e.message||e);
+}
+
+async function afterLogin(){
+  await loadAccount(false);
+  listenAccount();   // REALTIME: payment activate hote hi turant sab unlock
+  code = localStorage.getItem("fg_code");
+  if(code){ try{ const r = await db.collection("rooms").doc(code).get(); if(r.exists){ enterMain(); return; } }catch(e){} }
+  showScreen("pair");
+}
+
+/* ---------- trial claim (app jaisa — rules ke hisaab se) ---------- */
+async function loadAccount(notify){
+  try{
+    const snap = await db.collection("accounts").doc(user.uid).get();
+    if(snap.exists){ acc = snap.data(); }
+    else{
+      const devId = "web-" + Math.random().toString(36).slice(2,12);
+      const now = Date.now();
+      await db.collection("accounts").doc(user.uid).set({
+        email: user.email.toLowerCase(), createdAt: now,
+        trialEnd: now + 3*86400000, subEnd: 0, plan: "",
+        usesWeek: 0, usesCount: 0, deviceId: devId, roomCode: ""
+      });
+      await db.collection("devices").doc(devId).set({trialUsed:true, uid:user.uid, at:now});
+      const s2 = await db.collection("accounts").doc(user.uid).get();
+      acc = s2.data();
+    }
+    renderEntitlement();
+  }catch(e){ console.error(e); }
+}
+
+function active(){ return acc && (acc.trialEnd>Date.now() || acc.subEnd>Date.now()); }
+
+function renderEntitlement(){
+  const pill = document.getElementById("subPill");
+  const msg = document.getElementById("planMsg");
+  if(acc && acc.subEnd>Date.now()){
+    pill.textContent = "✓ Premium"; pill.className="pill ok";
+    msg.innerHTML = "✅ <b>Premium active</b> — "+fmtDate(acc.subEnd)+" tak. Sab features unlocked.";
+  } else if(acc && acc.trialEnd>Date.now()){
+    const d = Math.ceil((acc.trialEnd-Date.now())/86400000);
+    pill.textContent = "🎁 Trial · "+d+"d"; pill.className="pill ok";
+    msg.innerHTML = "🎉 <b>Free trial chal raha hai</b> — "+d+" din baaki. Sab features free.";
+  } else {
+    pill.textContent = "⚠ Trial over"; pill.className="pill over";
+    msg.innerHTML = "⛔ <b>Trial khatam</b> — features unlock karne ke liye plan chuno.";
+  }
+  // home buttons par lock badges
+  ["cam","apps","notif","chat","usage"].forEach(id=>{
+    document.getElementById("lk-"+id).classList.toggle("hide", active());
+  });
+}
+
+/* ---------- REALTIME payment activation (accounts/{uid} live listener) ---------- */
+let accUn=null, accFirstSnap=true;
+function listenAccount(){
+  if(accUn) accUn();
+  accFirstSnap=true;
+  accUn = db.collection("accounts").doc(user.uid).onSnapshot(s=>{
+    if(!s.exists) return;
+    const wasActive = active();
+    acc = s.data();
+    renderEntitlement();
+    if(accFirstSnap){ accFirstSnap=false; return; }   // login-time baseline, no toast
+    if(!wasActive && active()) paidToast();            // webhook ne subEnd likha — turant!
+  }, err=>{ console.error("account listener:", err); });
+}
+function paidToast(){
+  const t=document.createElement("div");
+  t.className="ptoast";
+  t.innerHTML="🎉 <b>Payment mil gaya — Premium ACTIVE!</b>&nbsp; Sab features unlocked";
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 8000);
+}
+
+/* ---------- PAY: in-page Razorpay modal (fallback: naya tab) ---------- */
+function jsonpGet(base, params){
+  return new Promise((resolve, reject)=>{
+    const cb = "fgcb" + Date.now() + Math.random().toString(36).slice(2, 8);
+    const s = document.createElement("script");
+    let done = false;
+    window[cb] = d=>{ done=true; delete window[cb]; s.remove(); resolve(d); };
+    s.onerror = ()=>{ if(!done){ delete window[cb]; s.remove(); reject(new Error("network")); } };
+    const q = Object.keys(params).map(k=>k+"="+encodeURIComponent(params[k])).join("&");
+    s.src = base + "?" + q + "&cb=" + cb;
+    document.head.appendChild(s);
+    setTimeout(()=>{ if(!done){ delete window[cb]; s.remove(); reject(new Error("timeout")); } }, 20000);
+  });
+}
+
+async function pay(plan){
+  if(WEBHOOK_URL.includes("PASTE")){ alert("Webhook URL config me daalo"); return; }
+  // 1) IN-PAGE MODAL — checkout dashboard par hi khulta hai (kahin jaana nahi)
+  try{
+    if(!window.Razorpay) throw new Error("checkout load nahi");
+    document.getElementById("planMsg").innerHTML = "Payment window khul rahi hai…";
+    const o = await jsonpGet(WEBHOOK_URL, {order:plan, email:user.email});
+    if(!o || !o.ok) throw new Error((o && o.msg) || "order fail");
+    const rzp = new Razorpay({
+      key:o.key, order_id:o.order_id, amount:o.amount, currency:"INR",
+      name:"FamilyGuard", description:plan.toUpperCase()+" plan",
+      prefill:{email:o.email}, theme:{color:"#2563EB"},
+      handler:async resp=>{
+        document.getElementById("planMsg").innerHTML = "Payment verify ho raha hai…";
+        let r = await jsonpGet(WEBHOOK_URL, {verify:1, razorpay_payment_id:resp.razorpay_payment_id}).catch(()=>null);
+        if(r && !r.ok && String(r.msg).indexOf("not captured")>=0){
+          await new Promise(rs=>setTimeout(rs, 2500));
+          r = await jsonpGet(WEBHOOK_URL, {verify:1, razorpay_payment_id:resp.razorpay_payment_id}).catch(()=>null);
+        }
+        if(r && r.ok){ paidToast(); loadAccount(true); }
+        else { alert("Payment mila, activation pending — thodi der baad \uD83D\uDD04 dabao ("+((r&&r.msg)||"network")+")"); loadAccount(true); }
+      },
+      modal:{ ondismiss:()=>renderEntitlement() }
+    });
+    rzp.on("payment.failed", resp=>{
+      alert("Payment fail: "+((resp.error&&resp.error.description)||"dobara try karo"));
+      renderEntitlement();
+    });
+    rzp.open();
+  }catch(e){
+    // 2) FALLBACK — naya tab (purana redirect flow)
+    window.open(WEBHOOK_URL+"?plan="+plan+"&email="+encodeURIComponent(user.email), "_blank");
+  }
+}
+
+/* ---------- pairing ---------- */
+async function doPair(){
+  const c = document.getElementById("pairCode").value.trim();
+  document.getElementById("pairMsg").innerHTML = "";
+  if(c.length!==6){ document.getElementById("pairMsg").innerHTML = `<div class="err">6-digit code daalo (child app ke bade screen par)</div>`; return; }
+  try{
+    const r = await db.collection("rooms").doc(c).get();
+    if(!r.exists){ document.getElementById("pairMsg").innerHTML = `<div class="err">Code galat hai — child app me naya code check karo</div>`; return; }
+    code = c; localStorage.setItem("fg_code", c);
+    db.collection("accounts").doc(user.uid).update({roomCode: c}).catch(()=>{});
+    enterMain();
+  }catch(e){ document.getElementById("pairMsg").innerHTML = `<div class="err">Internet/permission issue: ${e.message}</div>`; }
+}
+
+function disconnect(){
+  if(accUn){accUn(); accUn=null;}
+  if(roomUn) roomUn(); if(alertUn) alertUn(); if(notifUn) notifUn(); if(photoUn) photoUn();
+  roomUn=alertUn=notifUn=photoUn=null;
+  localStorage.removeItem("fg_code"); code=null;
+  showScreen("pair");
+}
+
+/* ---------- main ---------- */
+function enterMain(){
+  showScreen("main"); goHome();
+  console.log("FG listeners ATTACHED — room:", code, "| ver:", DASH_VER);
+  listenRoom(); listenAlerts(); listenNotifs(); listenPhotos();
+  pingChild();
+}
+
+function pingChild(){
+  if(!code) return;
+  db.collection("rooms").doc(code).update({parent_ping: Date.now(), status:"parent_joined"}).catch(()=>{});
+}
+
+function listenRoom(){
+  if(roomUn) roomUn();
+  roomUn = db.collection("rooms").doc(code).onSnapshot(s=>{
+    const f = s.data(); if(!f) return;
+    document.getElementById("childName").textContent = (f.name||"Child") + " · " + code;
+    const b=document.getElementById("stBatt");
+    if(f.batt_pct!=null){ b.textContent = f.batt_pct+"%"+(f.batt_chg?" ⚡":""); b.className = f.batt_pct>20?"ok":"amb"; }
+    const n=document.getElementById("stNet");
+    n.textContent = f.net_type==null ? "—" : (f.net_type==="WiFi"?"📶 WiFi": f.net_type==="Offline"?"❌ Offline":"📡 "+f.net_type);
+    const seen = f.lastSeen && f.lastSeen.toDate ? f.lastSeen.toDate().getTime() : (f.net_time||0);
+    const o=document.getElementById("stOn");
+    const online = Date.now()-seen < ONLINE_MS;
+    o.textContent = online?"🟢 Online":"🔴 Offline"; o.className = online?"ok":"red";
+    const h=document.getElementById("stHid");
+    h.textContent = f.app_hidden ? "🙈 Hidden":"👁 Visible"; h.className = f.app_hidden?"amb":"ok";
+    document.getElementById("hideBtn").textContent = f.app_hidden ? "👁 Unhide app" : "🙈 Hide app";
+    if(f.blocked) blocked = new Set(f.blocked);
+    // APPS — child format: [{p:"com.pkg", n:"Name", s:false}, ...]
+    if(f.apps){
+      lastAppsRaw = f.apps;
+      const sig = JSON.stringify(f.apps).length + ":" + (f.apps_echo||0) + ":" + (f.blocked?f.blocked.length:0);
+      if(sig !== appsSig){ appsSig = sig; renderApps(f.apps); }
+      else if(apps.length>0) { document.getElementById("appsMsg").textContent = apps.length+" apps · "+blocked.size+" blocked"; }
+    }
+    // REAL ICONS — child icon-pages (rooms/{code}/app_icons/page_N) EK BAAR
+    // read (session cache). Purana child (v4) room-doc me app_icons map deta tha.
+    if(f.app_icons){ Object.keys(f.app_icons).forEach(k=>{ if(!iconMap[k]) iconMap[k]=f.app_icons[k]; }); }
+    if(f.icons_fps && iconsLoadedFor!==code){
+      iconsLoadedFor = code;
+      loadIcons(Object.keys(f.icons_fps).map(Number).sort((a,b)=>a-b));
+    }
+    // APP USAGE — echo match: usage_req → usage (pkg→minutes) + usage_apps (names)
+    if(usageMyTs && f.usage_req_echo===usageMyTs && f.usage_req_echo!==usageLastEcho){
+      usageLastEcho = f.usage_req_echo;
+      const uerr = f.usage_error;
+      if(uerr==="permission") document.getElementById("usageMsg").textContent="❌ Usage Access OFF on child (Permissions Hub #4)";
+      else if(uerr==="empty") document.getElementById("usageMsg").textContent="No usage data (24h me kuch use nahi hua)";
+      else if(uerr==="error") document.getElementById("usageMsg").textContent="❌ Error — Refresh dabao";
+      else if(f.usage) renderUsage(f.usage, f.usage_apps||{});
+    }
+  }, err=>{
+    console.error("room listener:", err);
+    const n=document.getElementById("stNet"); if(n) n.textContent="❌ Room: "+(err.code||"error");
+  });
+}
+
+function toggleHide(){
+  const hiddenNow = document.getElementById("stHid").textContent.includes("Hidden");
+  db.collection("rooms").doc(code).update({hide_req:{ts:Date.now(), hide:!hiddenNow}}).catch(()=>{});
+}
+
+/* ---------- alerts ---------- */
+function listenAlerts(){
+  if(alertUn) alertUn();
+  alertUn = db.collection("alerts").where("code","==",code)
+    .onSnapshot(s=>{
+      // docChanges() — forEach() DOCUMENTS deta hai (type undefined = sab skip!)
+      s.docChanges().forEach(dc=>{
+        if(dc.type!=="added") return;
+        const d=dc.data(); const t=d.type||"alert"; const when=d.time?fmtTime(d.time):"";
+        const txt = ALERT_TEXT[t]||("⚠️ "+esc(t));   // esc — unknown type XSS-safe
+        const box=document.getElementById("alertBox");
+        box.innerHTML = `<div class="err" style="margin-top:12px">${txt}<div style="font-size:11.5px;margin-top:4px">${when}</div></div>`+box.innerHTML;
+        dc.ref.delete().catch(()=>{});
+      });
+    }, err=>{
+      console.error("alerts listener:", err);
+      document.getElementById("alertBox").innerHTML =
+        '<div class="err" style="margin-top:12px">❌ Alerts error: '+(err.code||err.message)+" — F12 console dekho</div>";
+    });
+}
+const ALERT_TEXT = {
+  admin_off:"⚠️ Device Admin turned OFF — uninstall possible!",
+  accessibility_off:"⚠️ Accessibility OFF — remote control disabled",
+  tamper_attempt:"🚨 3 galat lock-code attempts — phone locked",
+  cleaner_kill:"🧹 Cleaner ne child app maara — Hub #8 ON karo",
+  projection_deny:"🚨 Child ne screen-share CANCEL kiya"
+};
+
+/* ---------- camera ---------- */
+function shoot(face){
+  document.getElementById("photoMsg").textContent = "📷 Capturing… (5-10 sec)";
+  document.getElementById("photoImg").style.display="none";
+  pingChild();
+  db.collection("rooms").doc(code).update({cam_req:{ts:Date.now(), face:face, ping:Date.now()}}).catch(()=>{});
+}
+function listenPhotos(){
+  if(photoUn) photoUn();
+  photoUn = db.collection("photos").where("code","==",code).limit(5)
+    .onSnapshot(s=>{
+      // docChanges() — ASLI BUG: forEach() documents deta tha, type undefined
+      // hota tha, "added" check hamesha fail = photo KABHI process nahi hoti!
+      s.docChanges().forEach(dc=>{
+        if(dc.type!=="added") return;
+        const d=dc.data();
+        if(d.img){
+          const img=document.getElementById("photoImg");
+          img.src="data:image/jpeg;base64,"+d.img; img.style.display="block";
+          document.getElementById("photoMsg").innerHTML = `✅ Photo aayi (${d.face==="front"?"front":"back"} cam · ${ago(d.time)}) · <a href="${img.src}" download="familyguard.jpg" style="color:#93C5FD">Download</a>`;
+          dc.ref.delete().catch(()=>{});   // app jaisa — dikha ke delete (orphan nahi)
+        } else if(d.err){
+          document.getElementById("photoMsg").textContent = "❌ Error: "+d.err+(d.stage?" ["+d.stage+"]":"");
+          dc.ref.delete().catch(()=>{});
+        }
+      });
+    }, err=>{
+      console.error("photos listener:", err);
+      document.getElementById("photoMsg").textContent = "❌ Photos error: "+(err.code||err.message);
+    });
+}
+
+/* ---------- real app icons (child ke icon-pages se) ---------- */
+async function loadIcons(pages){
+  try{
+    for(const p of pages){
+      const doc = await db.collection("rooms").doc(code).collection("app_icons").doc("page_"+p).get();
+      if(doc.exists){
+        const ic = doc.data().icons || {};
+        Object.keys(ic).forEach(k=>{ iconMap[k]=ic[k]; });
+      }
+    }
+    // icons aa gaye — sab lists dobara render (asli icons ke saath)
+    if(lastAppsRaw) renderApps(lastAppsRaw);
+    renderNotifs(); renderChats();
+  }catch(e){ console.error("icons", e); }
+}
+
+/** pkg ka asli icon (img) — na mile to colored initial */
+function iconImg(pkg, name){
+  const b = iconMap[pkg];
+  if(b){
+    const mime = b.startsWith("iVBOR") ? "png" : "webp";   // PNG vs WEBP magic
+    return `<div class="ico pad"><img src="data:image/${mime};base64,${b}" alt=""></div>`;
+  }
+  return `<div class="ico" style="background:${colorFor(pkg)}">${(name||pkg||"?")[0].toUpperCase()}</div>`;
+}
+
+/* ---------- apps ---------- */
+function reqApps(){
+  document.getElementById("appsMsg").textContent = "⏳ Child se app list mangi… (5-10 sec)";
+  pingChild();
+  db.collection("rooms").doc(code).update({apps_req:Date.now()}).catch(()=>{});
+}
+function renderApps(list){
+  // child ka format: {p: packageName, n: name, s: system}
+  apps = (list||[]).map(e=>{ const m=e||{}; return {pkg:m.p||"", name:m.n||m.p||"?"}; }).filter(a=>a.pkg);
+  document.getElementById("appsMsg").textContent = apps.length+" apps · "+blocked.size+" blocked";
+  const el=document.getElementById("appsList");
+  if(apps.length===0){ el.innerHTML='<p class="muted">List khali — "Load / Refresh" dabao (child app online ho)</p>'; return; }
+  el.innerHTML="";
+  apps.sort((x,y)=> (blocked.has(x.pkg)?0:1)-(blocked.has(y.pkg)?0:1) || x.name.localeCompare(y.name));
+  apps.forEach(a=>{
+    const row=document.createElement("div"); row.className="item";
+    const ck = document.createElement("input"); ck.type="checkbox"; ck.className="chk";
+    ck.checked = blocked.has(a.pkg);
+    ck.onchange = ()=>{ if(ck.checked) blocked.add(a.pkg); else blocked.delete(a.pkg);
+      document.getElementById("appsMsg").textContent = apps.length+" apps · "+blocked.size+" blocked (Save dabana)"; };
+    const ico=document.createElement("div");
+    const b=iconMap[a.pkg];
+    if(b){ ico.className="ico pad"; const mime=b.startsWith("iVBOR")?"png":"webp";
+      ico.innerHTML=`<img src="data:image/${mime};base64,${b}" alt="">`; }
+    else { ico.className="ico"; ico.style.background=colorFor(a.pkg); ico.textContent=a.name[0].toUpperCase(); }
+    const bd=document.createElement("div"); bd.className="bd";
+    bd.innerHTML=`<b>${esc(a.name)}</b><span>${esc(a.pkg)}</span>`;
+    row.appendChild(ck); row.appendChild(ico); row.appendChild(bd);
+    el.appendChild(row);
+  });
+}
+function saveBlocked(){
+  db.collection("rooms").doc(code).update({blocked:Array.from(blocked)}).catch(()=>{});
+  document.getElementById("appsMsg").textContent = "💾 Saved — "+blocked.size+" blocked";
+}
+
+/* ---------- app usage ---------- */
+function reqUsage(){
+  usageMyTs = Date.now();
+  document.getElementById("usageMsg").textContent = "⏳ Child se usage data mangi… (5-10 sec)";
+  pingChild();
+  db.collection("rooms").doc(code).update({usage_req: usageMyTs}).catch(()=>{});
+}
+function renderUsage(usage, names){
+  const el = document.getElementById("usageList");
+  const entries = Object.entries(usage||{}).map(([p,m])=>[p,Number(m)||0]).sort((a,b)=>b[1]-a[1]);
+  const total = entries.reduce((s,e)=>s+e[1],0);
+  document.getElementById("usageMsg").textContent = "✅ Total screen time (24h): "+fmtMins(total)+" · "+entries.length+" apps";
+  if(entries.length===0){ el.innerHTML='<p class="muted">No usage data (24h me kuch use nahi hua)</p>'; return; }
+  el.innerHTML="";
+  const max = Math.max(...entries.map(e=>e[1]), 1);
+  entries.slice(0,30).forEach(([pkg,mins])=>{
+    const nm = names[pkg]||pkg;
+    const row=document.createElement("div"); row.className="item";
+    row.innerHTML=`${iconImg(pkg, nm)}
+      <div class="bd"><b>${esc(nm)}</b>
+        <div class="barw"><div class="barf" style="width:${Math.max(3,Math.round(mins/max*100))}%"></div></div></div>
+      <div class="side" style="font-size:13px;font-weight:700;color:#E2E8F0">${fmtMins(mins)}</div>`;
+    el.appendChild(row);
+  });
+}
+function fmtMins(m){ m=Math.round(Number(m)||0); return m>=60 ? Math.floor(m/60)+"h "+(m%60)+"m" : m+"m"; }
+
+/* ---------- notifications + chats ---------- */
+function listenNotifs(){
+  if(notifUn) notifUn();
+  notifUn = db.collection("notifs").where("code","==",code).limit(200)
+    .onSnapshot(s=>{
+      // docChanges() — same bug-fix (forEach documents par chalta tha)
+      s.docChanges().forEach(dc=>{
+        if(dc.type!=="added") return;
+        const d=dc.data();
+        if(d.time && !notifs.some(n=>n.id===dc.id)) notifs.push({id:dc.id,...d});
+      });
+      notifs.sort((a,b)=>(b.time||0)-(a.time||0));
+      notifs = notifs.slice(0,200);
+      renderNotifs(); renderChats();
+    }, err=>{
+      console.error("notifs listener:", err);
+      document.getElementById("notifList").innerHTML =
+        '<p class="muted" style="color:#F87171">❌ Notifications error: '+(err.code||err.message)+" — F12 console dekho</p>";
+    });
+}
+function renderNotifs(){
+  const el=document.getElementById("notifList");
+  if(notifs.length===0){ el.innerHTML='<p class="muted">Waiting for notifications…</p>'; return; }
+  el.innerHTML="";
+  notifs.slice(0,60).forEach(n=>{
+    const row=document.createElement("div"); row.className="item";
+    row.innerHTML=`${iconImg(n.pkg, n.app||n.title)}
+      <div class="bd"><b>${esc(n.title||n.app||"")}</b><span>${esc(n.text||"")}</span></div>
+      <div class="side">${ago(n.time)}</div>`;
+    el.appendChild(row);
+  });
+}
+function renderChats(){
+  const el=document.getElementById("chatList");
+  const chats = notifs.filter(n=>CHAT_PKGS.some(p=>(n.pkg||"").includes(p)));
+  const convs={};
+  chats.forEach(n=>{ const k=(n.pkg||"?")+"|"+(n.title||"?"); (convs[k]=convs[k]||[]).push(n); });
+  const keys=Object.keys(convs).sort((a,b)=>convs[b][0].time-convs[a][0].time);
+  if(keys.length===0){ el.innerHTML='<p class="muted">Waiting for chat notifications…</p>'; return; }
+  el.innerHTML="";
+  keys.forEach(k=>{
+    const list=convs[k].sort((a,b)=>b.time-a.time); const last=list[0];
+    const row=document.createElement("div"); row.className="item"; row.style.cursor="pointer";
+    row.onclick=()=>openThread(k);
+    row.innerHTML=`${iconImg(list[0].pkg, list[0].app)}
+      <div class="bd"><b>${esc(list[0].app||"")} · ${esc(list[0].title||"")}</b>
+      <span>${last.dir==="out"?"📤 ":"📥 "}${esc(last.text||"")}</span></div>
+      <div class="side">${list.length} msg<br>${ago(last.time)}</div>`;
+    el.appendChild(row);
+  });
+}
+function openThread(key){
+  const parts=key.split("|"); const pkg=parts[0]; const title=parts.slice(1).join("|");
+  const list=notifs.filter(n=>(n.pkg||"")===pkg&&(n.title||"")===title).sort((a,b)=>a.time-b.time);
+  document.getElementById("chatList").classList.add("hide");
+  const th=document.getElementById("chatThread"); th.classList.remove("hide");
+  const el=document.getElementById("threadList"); el.innerHTML="";
+  list.forEach(m=>{
+    const b=document.createElement("div");
+    b.className="bubble "+(m.dir==="out"?"b-out":"b-in");
+    b.innerHTML=`${esc(m.text||"")}<div style="font-size:10.5px;opacity:.7;margin-top:3px">${fmtTime(m.time)} ${m.dir==="out"?"📤 sent":"📥 received"}</div>`;
+    el.appendChild(b);
+  });
+}
+function closeThread(){
+  document.getElementById("chatThread").classList.add("hide");
+  document.getElementById("chatList").classList.remove("hide");
+}
+
+/* ---------- misc ---------- */
+function logout(){
+  if(accUn){accUn(); accUn=null;}
+  if(roomUn)roomUn(); if(alertUn)alertUn(); if(notifUn)notifUn(); if(photoUn)photoUn();
+  auth.signOut(); location.reload();
+}
+function esc(s){ return String(s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function colorFor(pkg){
+  const cs=["#25D366","#0088CC","#E1306C","#0084FF","#1877F2","#3A76F0","#5865F2","#2563EB"];
+  let h=0; for(const ch of String(pkg||"")) h=(h*31+ch.charCodeAt(0))>>>0;
+  return cs[h%cs.length];
+}
+function ago(t){ if(!t) return ""; const s=(Date.now()-t)/1000;
+  if(s<60)return "abhi"; if(s<3600)return Math.floor(s/60)+"m"; if(s<86400)return Math.floor(s/3600)+"h"; return Math.floor(s/86400)+"d"; }
+function fmtTime(t){ return new Date(t).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
+function fmtDate(t){ return new Date(t).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); }
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4642dba6b0dd27b',t:'MTc5MTI4NDU5Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
