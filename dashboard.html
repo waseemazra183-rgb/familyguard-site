@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- FamilyGuard dashboard v2.15-dcfix — DEPLOY CHECK: Ctrl+U (view-source) me YE line
+<!-- FamilyGuard dashboard v2.16-docref — DEPLOY CHECK: Ctrl+U (view-source) me YE line
      dikhni chahiye. Nahi dikhi = Netlify par PURANA version hai, naya upload karo! -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://checkout.razorpay.com https://script.google.com https://script.googleusercontent.com; connect-src 'self' https: wss:; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://*.firebaseapp.com https://*.razorpay.com https://accounts.google.com https://www.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://checkout.razorpay.com https://cdn.razorpay.com https://script.google.com https://script.googleusercontent.com; connect-src 'self' https: wss:; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://*.firebaseapp.com https://*.razorpay.com https://accounts.google.com https://www.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>FamilyGuard — Parent Dashboard</title>
 <style>
   :root{
@@ -376,7 +376,7 @@ const FIREBASE_CONFIG = {
   projectId: "familyguard-7a825",
 };
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyTi2EFujh8g040r5got6hD34AAkfd6OaGgog43rfHbVaA4nKycsRYRByH9ypvqZqM/exec";
-const DASH_VER = "v2.15-dcfix";   // F12 console me yahi version dikhna chahiye
+const DASH_VER = "v2.16-docref";   // F12 console me yahi version dikhna chahiye
 // APP CHECK (reCAPTCHA v3) — Firebase Console → App Check → Apps → web app
 // register karke jo SITE KEY mile yahan dalo. PASTE rahe to skip (abhi
 // log-only chalta hai; console me enforce karne par bot/script block).
@@ -753,11 +753,12 @@ function listenAlerts(){
       // docChanges() — forEach() DOCUMENTS deta hai (type undefined = sab skip!)
       s.docChanges().forEach(dc=>{
         if(dc.type!=="added") return;
-        const d=dc.doc.data();   // v2.15 FIX: dc.data() nahi — dc.doc.data() (crash tha!) const t=d.type||"alert"; const when=d.time?fmtTime(d.time):"";
+        const d=dc.doc.data();   // v2.16: dc.doc.data() — compat SDK ka sahi tareeka
+        const t=d.type||"alert"; const when=d.time?fmtTime(d.time):"";
         const txt = ALERT_TEXT[t]||("⚠️ "+esc(t));   // esc — unknown type XSS-safe
         const box=document.getElementById("alertBox");
         box.innerHTML = `<div class="err" style="margin-top:12px">${txt}<div style="font-size:11.5px;margin-top:4px">${when}</div></div>`+box.innerHTML;
-        dc.ref.delete().catch(()=>{});
+        dc.doc.ref.delete().catch(()=>{});
       });
     }, err=>{
       console.error("alerts listener:", err);
@@ -796,10 +797,10 @@ function listenPhotos(){
           const img=document.getElementById("photoImg");
           img.src="data:image/jpeg;base64,"+d.img; img.style.display="block";
           document.getElementById("photoMsg").innerHTML = `✅ Photo aayi (${d.face==="front"?"front":"back"} cam · ${ago(d.time)}) · <a href="${img.src}" download="familyguard.jpg" style="color:#93C5FD">Download</a>`;
-          dc.ref.delete().catch(()=>{});   // app jaisa — dikha ke delete (orphan nahi)
+          dc.doc.ref.delete().catch(()=>{});   // app jaisa — dikha ke delete (orphan nahi)
         } else if(d.err){
           document.getElementById("photoMsg").textContent = "❌ Error: "+d.err+(d.stage?" ["+d.stage+"]":"");
-          dc.ref.delete().catch(()=>{});
+          dc.doc.ref.delete().catch(()=>{});
         }
       });
     }, err=>{
@@ -910,7 +911,7 @@ function listenNotifs(){
       s.docChanges().forEach(dc=>{
         if(dc.type!=="added") return;
         const d=dc.doc.data();   // v2.15 FIX: dc.data() nahi — dc.doc.data() (crash tha!)
-        if(d.time && !notifs.some(n=>n.id===dc.id)) notifs.push({id:dc.id,...d});
+        if(d.time && !notifs.some(n=>n.id===dc.doc.id)) notifs.push({id:dc.doc.id,...d});   // v2.16: dc.doc.id — pehle undefined tha = live notifs skip!
       });
       notifs.sort((a,b)=>(b.time||0)-(a.time||0));
       notifs = notifs.slice(0,200);
@@ -987,5 +988,5 @@ function ago(t){ if(!t) return ""; const s=(Date.now()-t)/1000;
 function fmtTime(t){ return new Date(t).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
 function fmtDate(t){ return new Date(t).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a48fecd2b0526',t:'MTc5MTM0ODYyOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a568079f9cead',t:'MTc5MTM0OTE4MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
