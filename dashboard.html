@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FamilyGuard dashboard v2.12-dl-fix — DEPLOY CHECK: Ctrl+U (view-source) me YE line
+<!-- FamilyGuard dashboard v2.13-doctor — DEPLOY CHECK: Ctrl+U (view-source) me YE line
      dikhni chahiye. Nahi dikhi = Netlify par PURANA version hai, naya upload karo! -->
 <html lang="en">
 <head>
@@ -185,6 +185,7 @@
           <h2 style="font-size:18px">📱 Child Status</h2>
           <div style="display:flex;gap:4px">
             <button class="lnk" onclick="loadAccount(true);pingChild()">🔄</button>
+            <button class="lnk" onclick="runDiag()" title="Test / Diagnose">🩺</button>
             <button class="lnk" onclick="disconnect()">⏏ Disconnect</button>
           </div>
         </div>
@@ -375,7 +376,7 @@ const FIREBASE_CONFIG = {
   projectId: "familyguard-7a825",
 };
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyTi2EFujh8g040r5got6hD34AAkfd6OaGgog43rfHbVaA4nKycsRYRByH9ypvqZqM/exec";
-const DASH_VER = "v2.12-dl-fix";   // F12 console me yahi version dikhna chahiye
+const DASH_VER = "v2.13-doctor";   // F12 console me yahi version dikhna chahiye
 // APP CHECK (reCAPTCHA v3) — Firebase Console → App Check → Apps → web app
 // register karke jo SITE KEY mile yahan dalo. PASTE rahe to skip (abhi
 // log-only chalta hai; console me enforce karne par bot/script block).
@@ -637,6 +638,55 @@ function enterMain(){
   console.log("FG listeners ATTACHED — room:", code, "| ver:", DASH_VER);
   listenRoom(); listenAlerts(); listenNotifs(); listenPhotos();
   pingChild();
+}
+
+/* ---------- 🩺 DOCTOR — photos/notifs/chats kyun nahi? EK CLICK me pata ---------- */
+async function runDiag(){
+  const L=[];
+  L.push("🩺 FamilyGuard Web Doctor");
+  L.push(new Date().toLocaleString("en-IN"));
+  L.push("");
+  if(!code || !user){ alert("Pehle login + pair karo"); return; }
+  L.push("Room code (web): "+code);
+  // 1) ROOM DOC — fresh ya stale?
+  try{
+    const r = await db.collection("rooms").doc(code).get();
+    if(!r.exists){
+      L.push("\u274C Room doc NAHI MILA \u2014 code galat/expires. Unpair karke naya code daalo.");
+    }else{
+      const f=r.data();
+      const seen = f.lastSeen && f.lastSeen.toDate ? f.lastSeen.toDate().getTime() : (f.net_time||0);
+      const age = seen ? Math.round((Date.now()-seen)/60000) : null;
+      L.push("Child: "+(f.name||"?")+" \u00b7 battery "+(f.batt_pct??"?")+"% \u00b7 net "+(f.net_type||"?"));
+      if(age==null) L.push("\u26A0\uFE0F lastSeen nahi mila");
+      else if(age>15) L.push("\u26A0\uFE0F Child ka data "+age+" MIN PURANA hai \u2014 child shayad DOOSRE room/code par hai (parent app se dobara pair hua?) \u2192 web me Unpair karke child ke CURRENT code se pair karo");
+      else L.push("\u2705 Child data FRESH hai ("+age+" min purana) \u2014 child isi room par likh raha hai");
+    }
+  }catch(e){ L.push("\u274C Room read error: "+(e.code||e.message)); }
+  // 2) LISTENER SELF-TEST — khud test-notif likho, aati hai kya?
+  L.push("");
+  const tid = "diag_"+Date.now();
+  let wrote=true;
+  try{
+    await db.collection("notifs").doc(tid).set({code:code, pkg:"com.familyguard.diag", app:"FG Diag", title:"\uD83E\uDE7A Web test", text:"Doctor ka test message \u2014 ignore", type:"msg", dir:"in", chat:false, time:Date.now()});
+  }catch(e){ wrote=false; L.push("\u274C Firestore WRITE fail: "+(e.code||e.message)+" \u2192 rules problem"); }
+  if(wrote){
+    await new Promise(r=>setTimeout(r,6000));
+    const got = notifs.some(n=>n.id===tid);
+    L.push(got
+      ? "\u2705 WEB LISTENER KAAM KAR RAHA HAI (test message mil gaya)"
+      : "\u274C WEB LISTENER test message NahI mila \u2192 (a) page PURANA hai \u2014 Ctrl+U me v2.13 dikhna chahiye, nahi to naya upload + Ctrl+Shift+R (b) F12 console me red error dekho (c) Firestore rules publish kiye the? \u2014 screenshot bhejo");
+    try{ await db.collection("notifs").doc(tid).delete(); }catch(e){}
+    notifs = notifs.filter(n=>n.id!==tid);
+    renderNotifs(); renderChats();
+  }
+  // 3) VERDICT
+  L.push("");
+  L.push("\u2014\u2014 VERDICT \u2014\u2014");
+  L.push("\uD83D\uDCF8 Photos: parent PHONE app ka Camera screen khula ho to wo photo KHA jaata hai (show+delete). Web test karte waqt parent app BAND rakho.");
+  L.push("\uD83D\uDD14 Notifs: child phone me Notification Access ON hona chahiye (Permissions Hub). Naye message aane do phir yahan check karo.");
+  alert(L.join("\n"));
+  console.log(L.join("\n"));
 }
 
 function pingChild(){
@@ -930,5 +980,5 @@ function ago(t){ if(!t) return ""; const s=(Date.now()-t)/1000;
 function fmtTime(t){ return new Date(t).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
 function fmtDate(t){ return new Date(t).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46481e04e3bf2de',t:'MTc5MTI4ODA0Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a29201e250186',t:'MTc5MTM0NzMyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
