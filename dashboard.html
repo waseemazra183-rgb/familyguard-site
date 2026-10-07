@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FamilyGuard dashboard v2.16-docref — DEPLOY CHECK: Ctrl+U (view-source) me YE line
+<!-- FamilyGuard dashboard v2.18-allapps — DEPLOY CHECK: Ctrl+U (view-source) me YE line
      dikhni chahiye. Nahi dikhi = Netlify par PURANA version hai, naya upload karo! -->
 <html lang="en">
 <head>
@@ -376,7 +376,7 @@ const FIREBASE_CONFIG = {
   projectId: "familyguard-7a825",
 };
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyTi2EFujh8g040r5got6hD34AAkfd6OaGgog43rfHbVaA4nKycsRYRByH9ypvqZqM/exec";
-const DASH_VER = "v2.16-docref";   // F12 console me yahi version dikhna chahiye
+const DASH_VER = "v2.18-allapps";   // F12 console me yahi version dikhna chahiye
 // APP CHECK (reCAPTCHA v3) — Firebase Console → App Check → Apps → web app
 // register karke jo SITE KEY mile yahan dalo. PASTE rahe to skip (abhi
 // log-only chalta hai; console me enforce karne par bot/script block).
@@ -384,7 +384,7 @@ const APPCHECK_KEY = "PASTE_RECAPTCHA_V3_SITE_KEY";
 console.log("FamilyGuard dashboard", DASH_VER);
 /* ════════════════════════════════════════════════════════════════ */
 
-const CHAT_PKGS = ["whatsapp","telegram","instagram","snapchat","messenger","facebook","signal","discord"];
+const CHAT_PKGS = ["whatsapp","telegram","instagram","snapchat","messenger","facebook","signal","securesms","imo","viber","discord","tencent.mm","naver.line","linecorp","kik","skype","hike","slack","teams"];
 const ONLINE_MS = 20*60*1000;
 let db=null, auth=null, user=null, acc=null, code=null;
 let roomUn=null, alertUn=null, notifUn=null, photoUn=null;
@@ -934,11 +934,23 @@ function renderNotifs(){
     el.appendChild(row);
   });
 }
+function chatWho(n){
+  // v2.17: kai phone par WhatsApp notif ka title "WhatsApp" hi hota hai
+  // (contact nahi) — tab sab EK thread me mix ho jaate the. Aisa ho to
+  // text ke "Contact: message" prefix se asli contact nikaalo.
+  const t=(n.title||"").trim(), a=(n.app||"").trim();
+  if(t && t!==a && t.toLowerCase()!==a.toLowerCase() && t!==(n.pkg||"")) return t;
+  const m=((n.text||"").trim()).match(/^[^\n:]{1,40}:\s/);
+  if(m) return m[0].replace(/[:\s]+$/,"");
+  return t || a || "?";
+}
 function renderChats(){
   const el=document.getElementById("chatList");
-  const chats = notifs.filter(n=>CHAT_PKGS.some(p=>(n.pkg||"").includes(p)));
+  // v2.18: PRIMARY = child ka chat flag (jo bhi app child "chat" maare —
+  // automatically covered). CHAT_PKGS sirf purane docs ka legacy fallback.
+  const chats = notifs.filter(n=>n.chat===true || CHAT_PKGS.some(p=>(n.pkg||"").includes(p)));
   const convs={};
-  chats.forEach(n=>{ const k=(n.pkg||"?")+"|"+(n.title||"?"); (convs[k]=convs[k]||[]).push(n); });
+  chats.forEach(n=>{ const k=(n.pkg||"?")+"|"+chatWho(n); (convs[k]=convs[k]||[]).push(n); });
   const keys=Object.keys(convs).sort((a,b)=>convs[b][0].time-convs[a][0].time);
   if(keys.length===0){ el.innerHTML='<p class="muted">Waiting for chat notifications…</p>'; return; }
   el.innerHTML="";
@@ -946,8 +958,10 @@ function renderChats(){
     const list=convs[k].sort((a,b)=>b.time-a.time); const last=list[0];
     const row=document.createElement("div"); row.className="item"; row.style.cursor="pointer";
     row.onclick=()=>openThread(k);
+    const who=chatWho(list[0]); const appN=list[0].app||"";
+    const head = (who && who!==appN) ? esc(appN)+" · "+esc(who) : esc(appN||who);
     row.innerHTML=`${iconImg(list[0].pkg, list[0].app)}
-      <div class="bd"><b>${esc(list[0].app||"")} · ${esc(list[0].title||"")}</b>
+      <div class="bd"><b>${head}</b>
       <span>${last.dir==="out"?"📤 ":"📥 "}${esc(last.text||"")}</span></div>
       <div class="side">${list.length} msg<br>${ago(last.time)}</div>`;
     el.appendChild(row);
@@ -955,7 +969,7 @@ function renderChats(){
 }
 function openThread(key){
   const parts=key.split("|"); const pkg=parts[0]; const title=parts.slice(1).join("|");
-  const list=notifs.filter(n=>(n.pkg||"")===pkg&&(n.title||"")===title).sort((a,b)=>a.time-b.time);
+  const list=notifs.filter(n=>(n.pkg||"")===pkg&&chatWho(n)===title).sort((a,b)=>a.time-b.time);
   document.getElementById("chatList").classList.add("hide");
   const th=document.getElementById("chatThread"); th.classList.remove("hide");
   const el=document.getElementById("threadList"); el.innerHTML="";
@@ -988,5 +1002,5 @@ function ago(t){ if(!t) return ""; const s=(Date.now()-t)/1000;
 function fmtTime(t){ return new Date(t).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
 function fmtDate(t){ return new Date(t).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a568079f9cead',t:'MTc5MTM0OTE4MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a726f2f8158bb',t:'MTc5MTM1MDMyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
