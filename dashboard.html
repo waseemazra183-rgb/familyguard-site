@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- FamilyGuard dashboard v2.13-doctor — DEPLOY CHECK: Ctrl+U (view-source) me YE line
+<!-- FamilyGuard dashboard v2.14-window-fix — DEPLOY CHECK: Ctrl+U (view-source) me YE line
      dikhni chahiye. Nahi dikhi = Netlify par PURANA version hai, naya upload karo! -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://checkout.razorpay.com https://script.google.com https://script.googleusercontent.com; connect-src 'self' https://*.googleapis.com wss://*.googleapis.com https://*.firebaseio.com https://accounts.google.com https://script.google.com https://script.googleusercontent.com https://*.razorpay.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://*.firebaseapp.com https://*.razorpay.com https://accounts.google.com https://www.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://checkout.razorpay.com https://script.google.com https://script.googleusercontent.com; connect-src 'self' https: wss:; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://*.firebaseapp.com https://*.razorpay.com https://accounts.google.com https://www.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>FamilyGuard — Parent Dashboard</title>
 <style>
   :root{
@@ -376,7 +376,7 @@ const FIREBASE_CONFIG = {
   projectId: "familyguard-7a825",
 };
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyTi2EFujh8g040r5got6hD34AAkfd6OaGgog43rfHbVaA4nKycsRYRByH9ypvqZqM/exec";
-const DASH_VER = "v2.13-doctor";   // F12 console me yahi version dikhna chahiye
+const DASH_VER = "v2.14-window-fix";   // F12 console me yahi version dikhna chahiye
 // APP CHECK (reCAPTCHA v3) — Firebase Console → App Check → Apps → web app
 // register karke jo SITE KEY mile yahan dalo. PASTE rahe to skip (abhi
 // log-only chalta hai; console me enforce karne par bot/script block).
@@ -782,7 +782,10 @@ function shoot(face){
 }
 function listenPhotos(){
   if(photoUn) photoUn();
-  photoUn = db.collection("photos").where("code","==",code).limit(5)
+  // v2.14 FIX: limit(5) HATAYA — >5 photos jama hon ke baad nayi photo
+  // kabhi window me nahi aati thi (hamesha "Capturing… 5-10 sec" atakta).
+  // Ab purane orphan photos bhi dikhte-dikhte delete ho jayenge (safai).
+  photoUn = db.collection("photos").where("code","==",code)
     .onSnapshot(s=>{
       // docChanges() — ASLI BUG: forEach() documents deta tha, type undefined
       // hota tha, "added" check hamesha fail = photo KABHI process nahi hoti!
@@ -897,7 +900,11 @@ function fmtMins(m){ m=Math.round(Number(m)||0); return m>=60 ? Math.floor(m/60)
 /* ---------- notifications + chats ---------- */
 function listenNotifs(){
   if(notifUn) notifUn();
-  notifUn = db.collection("notifs").where("code","==",code).limit(200)
+  // v2.14 FIX: limit(200) HATAYA — bina orderBy ke Firestore purane docs
+  // pehle rakhta tha, to >200 docs jama hone ke BAAD naye notifs window ke
+  // BAHAR chale jaate the = notifications/chats kabhi nahi dikhte!
+  // (Client-side sort+slice neeche already hai — memory safe.)
+  notifUn = db.collection("notifs").where("code","==",code)
     .onSnapshot(s=>{
       // docChanges() — same bug-fix (forEach documents par chalta tha)
       s.docChanges().forEach(dc=>{
@@ -980,5 +987,5 @@ function ago(t){ if(!t) return ""; const s=(Date.now()-t)/1000;
 function fmtTime(t){ return new Date(t).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
 function fmtDate(t){ return new Date(t).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a29201e250186',t:'MTc5MTM0NzMyMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a3947ca6a867b',t:'MTc5MTM0Nzk4NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
