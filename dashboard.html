@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FamilyGuard dashboard v2.18-allapps — DEPLOY CHECK: Ctrl+U (view-source) me YE line
+<!-- FamilyGuard dashboard v2.19-24h — DEPLOY CHECK: Ctrl+U (view-source) me YE line
      dikhni chahiye. Nahi dikhi = Netlify par PURANA version hai, naya upload karo! -->
 <html lang="en">
 <head>
@@ -258,7 +258,7 @@
 
     <!-- ─── CHATS ─── -->
     <div class="fscreen hide" id="scr-chat">
-      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>💬 Chat Oversight</h2><div class="muted">WhatsApp / Telegram / Insta (3 din history)</div></div></div>
+      <div class="fhead"><button class="back" onclick="goHome()">←</button><div><h2>💬 Chat Oversight</h2><div class="muted">WhatsApp / Telegram / Insta (24 ghante history)</div></div></div>
       <div class="card">
         <div class="list" id="chatList"><p class="muted">Waiting for chat notifications…</p></div>
         <div class="hide" id="chatThread" style="margin-top:14px">
@@ -376,7 +376,7 @@ const FIREBASE_CONFIG = {
   projectId: "familyguard-7a825",
 };
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyTi2EFujh8g040r5got6hD34AAkfd6OaGgog43rfHbVaA4nKycsRYRByH9ypvqZqM/exec";
-const DASH_VER = "v2.18-allapps";   // F12 console me yahi version dikhna chahiye
+const DASH_VER = "v2.19-24h";   // F12 console me yahi version dikhna chahiye
 // APP CHECK (reCAPTCHA v3) — Firebase Console → App Check → Apps → web app
 // register karke jo SITE KEY mile yahan dalo. PASTE rahe to skip (abhi
 // log-only chalta hai; console me enforce karne par bot/script block).
@@ -389,6 +389,7 @@ const ONLINE_MS = 20*60*1000;
 let db=null, auth=null, user=null, acc=null, code=null;
 let roomUn=null, alertUn=null, notifUn=null, photoUn=null;
 let apps=[], blocked=new Set(), notifs=[], appsSig="";
+const RETENTION_MS = 24*3600*1000;   // v2.19: photos/chats/notifs 24 ghante baad auto-reset
 let iconMap={}, iconsLoadedFor=null, lastAppsRaw=null;   // real app icons (pages se)
 let usageMyTs=0, usageLastEcho=0;                        // app-usage protocol
 
@@ -636,6 +637,7 @@ function disconnect(){
 function enterMain(){
   showScreen("main"); goHome();
   console.log("FG listeners ATTACHED — room:", code, "| ver:", DASH_VER);
+  if(!window._fg24h){ window._fg24h=true; cleanupOld(); setInterval(cleanupOld, 3600000); }   // 24h reset sweeper
   listenRoom(); listenAlerts(); listenNotifs(); listenPhotos();
   pingChild();
 }
@@ -687,6 +689,17 @@ async function runDiag(){
   L.push("\uD83D\uDD14 Notifs: child phone me Notification Access ON hona chahiye (Permissions Hub). Naye message aane do phir yahan check karo.");
   alert(L.join("\n"));
   console.log(L.join("\n"));
+}
+
+/** 24-GHANTE RETENTION — purane photos/notifs/alerts Firestore se mitao
+ *  (parent app bhi yahi karta hai — dono milke quota safe) */
+function cleanupOld(){
+  const cut = Date.now() - RETENTION_MS;
+  ["notifs","photos","alerts"].forEach(col=>{
+    db.collection(col).where("time","<",cut).limit(100).get()
+      .then(q=>{ q.forEach(dd=>dd.ref.delete().catch(()=>{})); })
+      .catch(()=>{});
+  });
 }
 
 function pingChild(){
@@ -911,7 +924,7 @@ function listenNotifs(){
       s.docChanges().forEach(dc=>{
         if(dc.type!=="added") return;
         const d=dc.doc.data();   // v2.15 FIX: dc.data() nahi — dc.doc.data() (crash tha!)
-        if(d.time && !notifs.some(n=>n.id===dc.doc.id)) notifs.push({id:dc.doc.id,...d});   // v2.16: dc.doc.id — pehle undefined tha = live notifs skip!
+        if(d.time && d.time>Date.now()-RETENTION_MS && !notifs.some(n=>n.id===dc.doc.id)) notifs.push({id:dc.doc.id,...d});   // 24h se purane skip   // v2.16: dc.doc.id — pehle undefined tha = live notifs skip!
       });
       notifs.sort((a,b)=>(b.time||0)-(a.time||0));
       notifs = notifs.slice(0,200);
@@ -1002,5 +1015,5 @@ function ago(t){ if(!t) return ""; const s=(Date.now()-t)/1000;
 function fmtTime(t){ return new Date(t).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}); }
 function fmtDate(t){ return new Date(t).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); }
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a726f2f8158bb',t:'MTc5MTM1MDMyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a46a8ab0ee38f465',t:'MTc5MTM1MTMxOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
